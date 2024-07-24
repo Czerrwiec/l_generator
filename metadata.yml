@@ -1,0 +1,9 @@
+Version: 1.0.2.6
+FileDescription: List generator
+LegalCopyright: Czerwiec ©
+OriginalFilename: l_generator.exe
+Translation:
+  - langID: 0
+    charsetID: 1200
+  - langID: 1033
+    charsetID: 1252
