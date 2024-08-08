@@ -316,6 +316,7 @@ def get_and_display_path():
             folder_path = new_version_path
             button3.configure(state="normal")
             button_c.configure(state="normal")
+
         except:
             UnboundLocalError
             folder_path = ""
@@ -709,6 +710,8 @@ def send_email(user, email_receiver, kafle):
     message["From"] = sender_email
     message["To"] = ', '.join(emails)
     path_to_file = odt_file
+    port = data["users"][0]["port"]
+
 
     if len(kafle) > 1:
         # text = data["messeges"][1]["data"] + kafle
@@ -817,7 +820,7 @@ def send_email(user, email_receiver, kafle):
 
     # Create secure connection with server and send email
     context = ssl.create_default_context()
-    with smtplib.SMTP_SSL("poczta.cadprojekt.com.pl", 465, context=context) as server:
+    with smtplib.SMTP_SSL("poczta.cadprojekt.com.pl", port, context=context) as server:
         server.login(sender_email, password)
         server.sendmail(
             sender_email, emails, message.as_string()
