@@ -315,7 +315,7 @@ def get_and_display_path():
             label1.configure(text=new_version_cat)
             folder_path = new_version_path
             button3.configure(state="normal")
-            button_c.configure(state="disabled")
+            button_c.configure(state="normal")
         except:
             UnboundLocalError
             folder_path = ""
@@ -347,8 +347,8 @@ def ask_for_dir(value):
         folder_path = pack_dir
         button3.configure(state="normal")
         button2.configure(state="normal")
-        if folder_path.endswith("hotfix"):
-            button_c.configure(state="normal")
+        button_c.configure(state="normal")
+        
 
 def make_list(folder, csv_f):
 
@@ -925,9 +925,6 @@ def checkbox_event(file, var):
     elif var.get() == True:
         files_list.remove(file)
 
-    for a in files_list:
-        print(a)
-    
 
 def ok_button_function(window):
    
@@ -957,6 +954,7 @@ def open_choice_window(path):
     x = gui.winfo_x() + gui.winfo_width()//2 - choice_window.winfo_width()//2
     y = gui.winfo_y() + gui.winfo_height()//2 - choice_window.winfo_height()//2
     choice_window.geometry(f"+{x}+{y}")
+
     choice_window.after(10, choice_window.lift)
 
 
@@ -965,15 +963,21 @@ def open_choice_window(path):
     cuted_paths = list_paths(indexesList, all_paths)
     checkbox_paths = sort_files_del_from_dict(cuted_paths, all_paths)
 
-    
-    frame1 = CTkFrame(choice_window)
-    frame1.configure(border_width=2, fg_color="transparent")
-    frame1.pack(pady=(20,20), padx=(20,20))
+
+    scrollable_frame = CTkScrollableFrame(choice_window, width=230)
+
+    scrollable_frame.pack(side="top", pady=(20, 20), padx=(20, 20))
+
+  
+    if len(checkbox_paths) > 3 and len(checkbox_paths) < 7:
+        scrollable_frame.configure(height=400)
+    elif len(checkbox_paths) >= 7:
+        scrollable_frame.configure(height=450)
 
 
     for file in checkbox_paths:
         checkbox_var = BooleanVar(value=True)
-        checkbox = CTkCheckBox(frame1, text=os.path.basename(file), variable=checkbox_var, command=lambda x=file, var=checkbox_var : checkbox_event(x, var))
+        checkbox = CTkCheckBox(scrollable_frame, text=os.path.basename(file), variable=checkbox_var, command=lambda x=file, var=checkbox_var : checkbox_event(x, var))
         checkbox.pack(pady=(20, 20), padx=(20, 20), side="top", anchor=W)
 
     ok_button = CTkButton(choice_window, text="Ok", width=80, height=40, font=("Consolas", 14), command=lambda x=choice_window : ok_button_function(x))
