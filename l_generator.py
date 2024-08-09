@@ -30,6 +30,9 @@ csv_list = []
 checkbox_paths = {}
 bug_dict = {}
 files_list = []
+bugs_list_01 = []
+
+choiced_data = []
 
 
 all_programs = [
@@ -158,7 +161,6 @@ def sort_files_del_from_dict(file_list, bug_d):
     for x in listed_dict:
         if x.endswith(".txt"):
             del bug_d[x]
-
     return bug_d
 
 def make_list_to_cut(dict):
@@ -336,6 +338,8 @@ def ask_for_dir(value):
             s_dir = csv_dir.split("/")
             label0.configure(text=s_dir[-1])
             csv_file = csv_dir
+            button_csv.configure(state='normal')
+
         else:
             csv_file = ""
             label0.configure(text="Wybierz prawidłowy plik")
@@ -445,14 +449,17 @@ def make_list(folder, csv_f):
         target_paths = checkbox_paths
 
 
-    with open(csv_f, mode="r", encoding="utf-8") as file:
-        csv_file = csv.reader(file)
-        data = [tuple(row) for row in csv_file]
+    if len(choiced_data) == 0:
+        with open(csv_f, mode="r", encoding="utf-8") as file:
+            csv_file = csv.reader(file)
+            data = [tuple(row) for row in csv_file]
+    else:
+        data = choiced_data
+
 
     cat_list, cat_list02, cat_list_LM, cat_list_OBI, cat_list_rozkroj = add_lines_to_lists(
         data, all_programs, kitchen_pro
     )
-
 
     make_add_heading(
         f"Aktualizacja z dnia {datetime.today().strftime('%d.%m.%Y')} ", doc
@@ -558,6 +565,11 @@ def copy_pack(folder):
 
     directory_list =  make_path_list(new_dir)
 
+  
+    for i in directory_list:
+        if i.endswith(".txt"):
+            os.remove(i)
+       
     i_list = make_list_to_cut(directory_list)
 
 
@@ -574,8 +586,8 @@ def copy_pack(folder):
     
 def del_files_and_dirs(dir, paths):
 
-
     for p in make_path_list(dir):
+
         dir_to_remove = []
         dir_to_remove_02 = []
 
@@ -930,7 +942,7 @@ def checkbox_event(file, var):
 
 
 def ok_button_function(window):
-   
+
     if len(files_list) == len(checkbox_paths):
         x = CTkMessagebox.messagebox(
         title="Błąd!",
@@ -941,9 +953,6 @@ def ok_button_function(window):
         for f in files_list:
             del checkbox_paths[f]
         window.destroy()
-    
-       
-
 
 def open_choice_window(path):
     global files_list
@@ -980,11 +989,86 @@ def open_choice_window(path):
 
     for file in checkbox_paths:
         checkbox_var = BooleanVar(value=True)
-        checkbox = CTkCheckBox(scrollable_frame, text=os.path.basename(file), variable=checkbox_var, command=lambda x=file, var=checkbox_var : checkbox_event(x, var))
+        checkbox = CTkCheckBox(scrollable_frame, text=os.path.basename(file), font=("Consolas", 14), variable=checkbox_var, command=lambda x=file, var=checkbox_var : checkbox_event(x, var))
         checkbox.pack(pady=(20, 20), padx=(20, 20), side="top", anchor=W)
 
     ok_button = CTkButton(choice_window, text="Ok", width=80, height=40, font=("Consolas", 14), command=lambda x=choice_window : ok_button_function(x))
     ok_button.pack(padx=(0,0), pady=(15,20), anchor=CENTER)
+
+
+def handle_bugs_list(bug, var):
+
+    global bugs_list_01
+    
+    if var.get() == False:
+        bugs_list_01.append(bug)
+    elif var.get() == True:
+        bugs_list_01.remove(bug)
+
+
+def ok_button_function_bugs(window):
+
+    if len(bugs_list_01) + 1 == len(choiced_data):
+        x = CTkMessagebox.messagebox(
+        title="Błąd!",
+        text='Wybierz chociaż jeden plik',
+        button_text="OK",
+        
+    )          
+    elif len(bugs_list_01) + 1 != len(choiced_data):
+        for i in choiced_data[:]:
+            if i[0] in bugs_list_01:
+                choiced_data.remove(i)
+        window.destroy()
+
+
+def open_bugs(file_0):
+
+    global choiced_data
+    global bugs_list_01
+    bugs_list_01 = []
+
+    list_of_csv_items = []
+
+    bugs_window = CTkToplevel(gui)
+    bugs_window.title("Wybierz bugi")
+   
+    x = gui.winfo_x() + gui.winfo_width()//2 - bugs_window.winfo_width()//2
+    y = gui.winfo_y() + gui.winfo_height()//2 - bugs_window.winfo_height()//2
+    bugs_window.geometry(f"+{x}+{y}")
+    bugs_window.after(10, bugs_window.lift)
+
+    bug_list = []
+
+    with open(file_0, mode="r", encoding="utf-8") as item:
+        file = csv.reader(item)
+        list_of_csv_items = [tuple(row) for row in file]
+
+    choiced_data = list_of_csv_items
+
+    for a in list_of_csv_items:
+        bug_list.append(a[0] + ' ' + a[1][:100] + '...')
+        
+    bug_list.pop(0)
+
+    scrollable_frame_01 = CTkScrollableFrame(bugs_window, width=500)
+
+    scrollable_frame_01.pack(side="top", pady=(20, 20), padx=(20, 20))
+
+    if len(bug_list) > 3 and len(bug_list) < 7:
+        scrollable_frame_01.configure(height=400)
+    elif len(bug_list) >= 7:
+        scrollable_frame_01.configure(height=450)
+
+
+    for line in bug_list:
+        checkbox_var = BooleanVar(value=True)
+        checkbox = CTkCheckBox(scrollable_frame_01, text=line, font=("Consolas", 14), variable=checkbox_var, command=lambda x=line[:7], var=checkbox_var : handle_bugs_list(x, var))
+        checkbox.pack(pady=(20, 20), padx=(20, 20), side="top", anchor=W)
+
+    ok_button = CTkButton(bugs_window, text="Ok", width=80, height=40, font=("Consolas", 14), command=lambda x=bugs_window : ok_button_function_bugs(x))
+    ok_button.pack(padx=(0,0), pady=(15,20), anchor=CENTER)
+
 
 
 doc = OpenDocumentText()
@@ -1069,9 +1153,12 @@ tabparagraphstyle01.addElement(ParagraphProperties(lineheight="135%"))
 tabparagraphstyle01.addElement(tabstoppar01)
 doc_s.addElement(tabparagraphstyle01)
 
+
+
+
 gui = CTk()
 
-gui.geometry("350x620")
+gui.geometry("350x700")
 gui.title("Generator")
 gui.resizable(False, False)
 
@@ -1117,6 +1204,21 @@ button0 = CTkButton(
     command=lambda v=1: ask_for_dir(v),
 )
 button0.pack(pady=(5, 25), anchor=CENTER)
+
+button_csv = CTkButton(
+    gui,
+    text="Wybierz bugi",
+    width=160,
+    height=40,
+    font=("Consolas", 16),
+    command=lambda : open_bugs(csv_file),
+)
+button_csv.pack(pady=(5, 25), anchor=CENTER)
+
+if csv_file == None:
+    button_csv.configure(state='disabled')
+    
+
 
 button_c = CTkButton(
     gui,
